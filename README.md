@@ -2,9 +2,36 @@
 
 A local dashboard for getting files ready to upload to **YouTube, Shopify, Gumroad, Etsy, TikTok and Instagram**.
 
-Add your videos, images and product files. Fill in the title, description, tags and price once, and override any of them per platform. The dashboard checks everything against each platform's limits and exports a folder per platform with the files plus a `DETAILS.txt` you can copy and paste from.
+Add your videos, images and product files, plus an optional details sheet that fills everything in. Each platform has its own tab showing the files it will use and the text ready to paste. Or fill in the title, description, tags and price once, and override any of them per platform. The dashboard checks everything against each platform's limits and exports a folder per platform with the files plus a `DETAILS.txt` you can copy and paste from.
 
 This app only prepares uploads. It does not log in to or post to any platform.
+
+## Details sheet (auto-fill)
+
+Drop a details sheet in with your files and every platform tab gets filled in. It can be a `.txt`, `.md`, `.docx` or `.pdf` file. Download the template from the dashboard or use `public/details-template.txt`:
+
+```
+Title: Haunted Places Vol. 1
+Price: 9.99
+Tags: haunted places, paranormal, ghost stories
+Platforms: YouTube, Gumroad
+
+Description:
+As many lines as you want.
+
+[Etsy]
+Title: A title just for Etsy
+
+[TikTok]
+Caption: Would you stay here overnight?
+Hashtags: #haunted #fyp
+```
+
+- The keys are `Title`, `Description` (or `Caption`), `Tags` (or `Hashtags`), `Price` and `Platforms`. They aren't case-sensitive.
+- A `[Platform]` section changes values for just that platform, and also switches that platform on.
+- If the sheet names no platforms and none are switched on yet, all of them are switched on.
+- A file only counts as a details sheet if it has at least two of these keys. A product PDF won't be mistaken for one.
+- The sheet is used only to fill in details. It is never exported as a product file.
 
 ## Run it (Windows)
 

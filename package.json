@@ -18,6 +18,8 @@
   "homepage": "https://github.com/ArchiveOFtheUnusual/Add-Checker-#readme",
   "dependencies": {
     "express": "^5.2.1",
-    "multer": "^2.4.0"
+    "mammoth": "^1.12.3",
+    "multer": "^2.4.0",
+    "pdfjs-dist": "^6.3.289"
   }
 }

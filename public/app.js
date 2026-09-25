@@ -56,10 +56,15 @@ async function open(id) {
   location.hash = id;
   $('#empty').hidden = true;
   $('#editor').hidden = false;
+  $('#sheet-note').hidden = true;
+  fillInputs();
+  refreshList();
+}
+
+function fillInputs() {
   $('#project-name').value = project.name;
   for (const el of document.querySelectorAll('[data-main]')) el.value = project.main[el.dataset.main];
   renderAll();
-  refreshList();
 }
 
 function renderAll() {
@@ -140,8 +145,23 @@ function uploadFiles(list) {
     prog.hidden = true;
     const data = JSON.parse(xhr.responseText);
     if (xhr.status !== 200) return alert('Upload failed: ' + data.error);
-    applyFiles(data);
-    renderAll();
+    if (data.sheets.length) {
+      // The sheet's values win over anything typed but not yet saved (except the project name).
+      clearTimeout(saveTimer);
+      const name = pending.name;
+      pending = name ? { name } : {};
+      if (name) flush();
+      else $('#save-state').textContent = 'Saved';
+      project = { ...data, name: name ?? data.name };
+      const on = Object.keys(platforms).filter((k) => project.platforms[k].enabled);
+      if (on.length && !on.includes(currentTab)) currentTab = on[0];
+      fillInputs();
+      $('#sheet-note').hidden = false;
+      $('#sheet-note').textContent = `Filled in from ${data.sheets.join(', ')}. Platforms: ${on.map((k) => platforms[k].name).join(', ')}.`;
+    } else {
+      applyFiles(data);
+      renderAll();
+    }
     refreshList();
     for (const f of project.files) if (!before.has(f.name)) measure(f);
   };
@@ -177,17 +197,22 @@ function measure(f) {
   }
 }
 
+function thumbHtml(f) {
+  if (f.kind === 'image') return `<img src="${fileUrl(f)}" loading="lazy" alt="">`;
+  if (f.kind === 'video') return `<video src="${fileUrl(f)}#t=1" preload="metadata" muted></video>`;
+  if (f.kind === 'sheet') return '<div class="doc">DETAILS SHEET</div>';
+  return `<div class="doc">${esc(f.name.split('.').pop().toUpperCase())}</div>`;
+}
+
 function renderFiles() {
   $('#files').innerHTML = project.files.map((f) => {
-    const thumb = f.kind === 'image' ? `<img src="${fileUrl(f)}" loading="lazy" alt="">`
-      : f.kind === 'video' ? `<video src="${fileUrl(f)}#t=1" preload="metadata" muted></video>`
-      : `<div class="doc">${esc(f.name.split('.').pop().toUpperCase())}</div>`;
+    const thumb = thumbHtml(f);
     const dims = f.width ? ` · ${f.width}×${f.height}` : '';
     const dur = f.duration ? ` · ${fmtTime(f.duration)}` : '';
     return `<figure>
       ${thumb}
       <figcaption><span title="${esc(f.name)}">${esc(f.name)}</span>
-      <small class="muted">${f.kind} · ${fmtSize(f.size)}${dims}${dur}</small></figcaption>
+      <small class="muted">${f.kind === 'sheet' ? 'fills in details' : f.kind} · ${fmtSize(f.size)}${dims}${dur}</small></figcaption>
       <button class="remove" data-name="${esc(f.name)}" title="Remove">×</button>
     </figure>`;
   }).join('');
@@ -201,36 +226,59 @@ $('#files').onclick = async (e) => {
   refreshList();
 };
 
-// ---------- platforms ----------
+// ---------- platforms (one tab each) ----------
 const FIELD_LABEL = { title: 'Title', description: 'Description', tags: 'Tags (comma separated)', price: 'Price (USD)' };
+const STATUS_TEXT = { ready: 'Ready', warn: 'Ready (with warnings)', error: 'Needs fixes', off: 'Off' };
+let currentTab = 'youtube';
+
+function tabStatus(key) {
+  return project.platforms[key].enabled ? project.status[key]?.status || 'ready' : 'off';
+}
+
+function showTab(key) {
+  if (!key) return;
+  currentTab = key;
+  renderPlatforms();
+}
+
+function renderTabs() {
+  $('#platform-tabs').innerHTML = Object.entries(platforms).map(([k, p]) =>
+    `<button role="tab" data-tab="${k}" aria-selected="${k === currentTab}" class="tab ${tabStatus(k)}">
+      <span class="dot"></span>${esc(p.name)}</button>`
+  ).join('');
+}
 
 function renderPlatforms() {
-  $('#platform-toggles').innerHTML = Object.entries(platforms).map(([k, p]) =>
-    `<label class="toggle"><input type="checkbox" data-toggle="${k}" ${project.platforms[k].enabled ? 'checked' : ''}> ${esc(p.name)}</label>`
-  ).join('');
+  renderTabs();
+  const key = currentTab;
+  const p = platforms[key];
+  const cfg = project.platforms[key];
+  const panel = $('#platform-panel');
+  panel.innerHTML = '';
+  const card = $('#card-tpl').content.firstElementChild.cloneNode(true);
+  card.dataset.key = key;
+  $('h3', card).textContent = p.name;
+  $('.enable', card).checked = cfg.enabled;
+  $('.enable-label', card).append(` Prepare for ${p.name}`);
+  $('.body', card).hidden = !cfg.enabled;
 
-  const cards = $('#platform-cards');
-  cards.innerHTML = '';
-  for (const [key, p] of Object.entries(platforms)) {
-    const cfg = project.platforms[key];
-    if (!cfg.enabled) continue;
-    const card = $('#card-tpl').content.firstElementChild.cloneNode(true);
-    card.dataset.key = key;
-    $('h3', card).textContent = p.name;
-    $('.overrides', card).innerHTML = p.fields.map((f) => {
-      const input = f === 'description'
-        ? `<textarea data-field="${f}" rows="4">${esc(cfg[f] ?? '')}</textarea>`
-        : `<input data-field="${f}" value="${esc(cfg[f] ?? '')}">`;
-      return `<label class="${f === 'description' || f === 'tags' ? 'wide' : ''}">${FIELD_LABEL[f]}${input}</label>`;
-    }).join('');
-    const excluded = new Set(cfg.excluded);
-    const usable = project.files.filter((f) => p.accepts.includes(f.kind));
-    $('.include', card).innerHTML = usable.length
-      ? usable.map((f) => `<label><input type="checkbox" data-file="${esc(f.name)}" ${excluded.has(f.name) ? '' : 'checked'}> ${esc(f.name)}</label>`).join('')
-      : `<span class="muted">No ${p.accepts.join('/')} files yet</span>`;
-    $('.sources', card).innerHTML = 'Limits from: ' + p.sources.map((s) => `<a href="${s}" target="_blank" rel="noopener">${esc(new URL(s).hostname)}</a>`).join(', ');
-    cards.append(card);
-  }
+  const usable = project.files.filter((f) => p.accepts.includes(f.kind));
+  const excluded = new Set(cfg.excluded);
+  $('.include', card).innerHTML = usable.length
+    ? usable.map((f) => `<label class="pick">
+        ${thumbHtml(f)}
+        <span><input type="checkbox" data-file="${esc(f.name)}" ${excluded.has(f.name) ? '' : 'checked'}> ${esc(f.name)}</span>
+      </label>`).join('')
+    : `<span class="muted">No ${p.accepts.join(' / ')} files yet</span>`;
+
+  $('.overrides', card).innerHTML = p.fields.map((f) => {
+    const input = f === 'description'
+      ? `<textarea data-field="${f}" rows="4">${esc(cfg[f] ?? '')}</textarea>`
+      : `<input data-field="${f}" value="${esc(cfg[f] ?? '')}">`;
+    return `<label class="${f === 'description' || f === 'tags' ? 'wide' : ''}">${FIELD_LABEL[f]}${input}</label>`;
+  }).join('');
+  $('.sources', card).innerHTML = 'Limits from: ' + p.sources.map((s) => `<a href="${s}" target="_blank" rel="noopener">${esc(new URL(s).hostname)}</a>`).join(', ');
+  panel.append(card);
   renderPlaceholders();
   renderStatus();
 }
@@ -240,29 +288,37 @@ function renderPlaceholders() {
 }
 
 function renderStatus() {
-  for (const card of document.querySelectorAll('.card')) {
-    const s = project.status[card.dataset.key];
-    if (!s) continue;
-    const badge = $('.badge', card);
-    badge.className = 'badge ' + s.status;
-    badge.textContent = { ready: 'Ready', warn: 'Ready (with warnings)', error: 'Needs fixes' }[s.status];
-    $('.issues', card).innerHTML = s.issues.map((i) => `<li class="${i.level}">${esc(i.msg)}</li>`).join('');
-    $('.preview', card).innerHTML = Object.entries(s.fields).map(([k, v]) => `
-      <div class="field"><div class="field-head"><strong>${esc(k)}</strong>
-      <button class="copy" data-value="${esc(v)}">Copy</button></div>
-      <pre>${esc(v) || '<span class="muted">(empty)</span>'}</pre></div>`).join('');
-    $('.export', card).disabled = s.status === 'error';
-  }
+  renderTabs();
+  const card = $('#platform-panel .card');
+  if (!card) return;
+  const st = tabStatus(card.dataset.key);
+  const badge = $('.badge', card);
+  badge.className = 'badge ' + st;
+  badge.textContent = STATUS_TEXT[st];
+  const s = project.status[card.dataset.key];
+  if (!s) return;
+  $('.issues', card).innerHTML = s.issues.map((i) => `<li class="${i.level}">${esc(i.msg)}</li>`).join('');
+  $('.preview', card).innerHTML = Object.entries(s.fields).map(([k, v]) => `
+    <div class="field"><div class="field-head"><strong>${esc(k)}</strong>
+    <button class="copy" data-value="${esc(v)}">Copy</button></div>
+    <pre>${esc(v) || '<span class="muted">(empty)</span>'}</pre></div>`).join('');
+  $('.export', card).disabled = s.status === 'error';
 }
 
-$('#platform-toggles').onchange = (e) => {
-  const key = e.target.dataset.toggle;
+$('#platform-tabs').onclick = (e) => {
+  const b = e.target.closest('[data-tab]');
+  if (b) showTab(b.dataset.tab);
+};
+
+$('#platform-panel').onchange = (e) => {
+  if (!e.target.classList.contains('enable')) return;
+  const key = currentTab;
   project.platforms[key].enabled = e.target.checked;
   queueSave({ platforms: { [key]: { enabled: e.target.checked } } });
   renderPlatforms();
 };
 
-$('#platform-cards').oninput = (e) => {
+$('#platform-panel').oninput = (e) => {
   const card = e.target.closest('.card');
   const key = card.dataset.key;
   const cfg = project.platforms[key];
@@ -275,7 +331,7 @@ $('#platform-cards').oninput = (e) => {
   }
 };
 
-$('#platform-cards').onclick = async (e) => {
+$('#platform-panel').onclick = async (e) => {
   if (e.target.classList.contains('copy')) {
     await navigator.clipboard.writeText(e.target.dataset.value);
     e.target.textContent = 'Copied';

@@ -5,6 +5,7 @@ const path = require('path');
 const crypto = require('crypto');
 const { spawn } = require('child_process');
 const { PLATFORMS, kindOf, effectiveMeta, platformFiles, check } = require('./platforms');
+const { readSheet } = require('./sheet');
 
 const ROOT = path.join(__dirname, '..');
 const DATA = path.join(ROOT, 'data', 'projects');
@@ -130,12 +131,36 @@ const upload = multer({
 app.post('/api/projects/:id/files', wrap(async (req, res) => {
   load(req.params.id);
   await new Promise((ok, fail) => upload.array('files')(req, res, (e) => (e ? fail(e) : ok())));
+  const sheets = {};
+  for (const f of req.files) sheets[f.filename] = await readSheet(f.path);
   const p = load(req.params.id); // re-read after the (possibly long) upload
   for (const f of req.files) {
-    p.files.push({ name: f.filename, size: f.size, mime: f.mimetype, kind: kindOf(f.filename, f.mimetype) });
+    const sheet = sheets[f.filename];
+    p.files.push({ name: f.filename, size: f.size, mime: f.mimetype, kind: sheet ? 'sheet' : kindOf(f.filename, f.mimetype) });
+    if (sheet) applySheet(p, sheet);
   }
-  res.json(withStatus(save(p)));
+  // TikTok posts are a video OR photos, so when there's a video, new images start unchecked there.
+  const tt = p.platforms.tiktok;
+  const newNames = new Set(req.files.map((f) => f.filename));
+  const firstVideo = req.files.some((f) => kindOf(f.filename, f.mimetype) === 'video') &&
+    !p.files.some((f) => f.kind === 'video' && !newNames.has(f.name));
+  if (p.files.some((f) => f.kind === 'video')) {
+    for (const f of p.files) {
+      if (f.kind === 'image' && (firstVideo || newNames.has(f.name)) && !tt.excluded.includes(f.name)) tt.excluded.push(f.name);
+    }
+  }
+  res.json({ ...withStatus(save(p)), sheets: Object.keys(sheets).filter((n) => sheets[n]) });
 }));
+
+// Sheet values replace what's there. Platforms named in the sheet get switched on;
+// if it names none and none are on yet, all are switched on.
+function applySheet(p, sheet) {
+  Object.assign(p.main, sheet.main);
+  for (const [key, fields] of Object.entries(sheet.platforms)) Object.assign(p.platforms[key], fields);
+  const anyOn = Object.values(p.platforms).some((c) => c.enabled);
+  const enable = sheet.enable.length ? sheet.enable : anyOn ? [] : Object.keys(PLATFORMS);
+  for (const key of enable) p.platforms[key].enabled = true;
+}
 
 // Browser measures width/height/duration and reports them here.
 app.put('/api/projects/:id/files/:name/meta', wrap((req, res) => {
