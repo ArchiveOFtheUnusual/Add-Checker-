@@ -1,16 +1,18 @@
 {
   "name": "upload-prep",
-  "version": "1.0.0",
-  "description": "Dashboard to prep files for YouTube, Shopify, Gumroad, Etsy, TikTok and Instagram",
-  "main": "src/server.js",
+  "version": "1.1.0",
+  "description": "Prep files for YouTube, Shopify, Gumroad, Etsy, TikTok and Instagram",
+  "main": "electron/main.js",
   "scripts": {
-    "start": "node src/server.js"
+    "start": "node src/server.js",
+    "app": "electron .",
+    "dist": "electron-builder --win portable --x64"
   },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/ArchiveOFtheUnusual/Add-Checker-.git"
   },
-  "author": "",
+  "author": "ArchiveOFtheUnusual",
   "license": "ISC",
   "bugs": {
     "url": "https://github.com/ArchiveOFtheUnusual/Add-Checker-/issues"
@@ -21,5 +23,33 @@
     "mammoth": "^1.12.3",
     "multer": "^2.4.0",
     "pdfjs-dist": "^6.3.289"
+  },
+  "devDependencies": {
+    "electron": "^44.4.5",
+    "electron-builder": "^26.15.3"
+  },
+  "productName": "Upload Prep",
+  "build": {
+    "appId": "com.archiveoftheunusual.uploadprep",
+    "productName": "Upload Prep",
+    "files": [
+      "electron/**",
+      "src/**",
+      "public/**",
+      "package.json"
+    ],
+    "asarUnpack": [
+      "node_modules/pdfjs-dist/**"
+    ],
+    "directories": {
+      "output": "dist"
+    },
+    "win": {
+      "target": "portable",
+      "signAndEditExecutable": false
+    },
+    "portable": {
+      "artifactName": "Upload-Prep-${version}.exe"
+    }
   }
 }
