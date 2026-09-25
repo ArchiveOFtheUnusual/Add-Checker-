@@ -1,0 +1,25 @@
+{
+  "name": "upload-prep",
+  "version": "1.0.0",
+  "description": "Dashboard to prep files for YouTube, Shopify, Gumroad, Etsy, TikTok and Instagram",
+  "main": "src/server.js",
+  "scripts": {
+    "start": "node src/server.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ArchiveOFtheUnusual/Add-Checker-.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/ArchiveOFtheUnusual/Add-Checker-/issues"
+  },
+  "homepage": "https://github.com/ArchiveOFtheUnusual/Add-Checker-#readme",
+  "dependencies": {
+    "express": "^5.2.1",
+    "mammoth": "^1.12.3",
+    "multer": "^2.4.0",
+    "pdfjs-dist": "^6.3.289"
+  }
+}

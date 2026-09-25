@@ -1,0 +1,21 @@
+Title: Your title here
+Price: 9.99
+Tags: tag one, tag two, tag three
+
+Description:
+Write your description here.
+It can be as many lines as you want.
+
+[YouTube]
+Title: A different title just for YouTube (optional)
+
+[Etsy]
+Title: Etsy title, up to 140 characters
+Tags: up to 13 tags, each 20 characters max
+
+[TikTok]
+Caption: Short caption for TikTok
+Hashtags: #fyp #yourtopic
+
+[Instagram]
+Caption: Caption for Instagram
