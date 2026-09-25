@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Upload Prep</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <aside id="sidebar">
+    <h1>Upload Prep</h1>
+    <form id="new-project">
+      <input name="name" placeholder="New project name" required>
+      <button>Add</button>
+    </form>
+    <ul id="projects"></ul>
+  </aside>
+
+  <main id="main">
+    <div id="empty" class="empty">Create or pick a project to start.</div>
+
+    <div id="editor" hidden>
+      <header class="editor-head">
+        <input id="project-name" class="title-input" aria-label="Project name">
+        <span id="save-state" class="muted"></span>
+        <button id="delete-project" class="danger">Delete project</button>
+      </header>
+
+      <section>
+        <h2>Files</h2>
+        <label id="drop" class="drop">
+          <input type="file" id="file-input" multiple hidden>
+          Drop videos, images or product files here, or click to choose
+        </label>
+        <div id="progress" hidden><div class="bar"><div></div></div><span></span></div>
+        <div id="files" class="files"></div>
+      </section>
+
+      <section>
+        <h2>Main details <span class="muted">used by every platform unless overridden</span></h2>
+        <div class="grid">
+          <label>Title<input data-main="title"></label>
+          <label>Price (USD)<input data-main="price" inputmode="decimal"></label>
+          <label class="wide">Description<textarea data-main="description" rows="6"></textarea></label>
+          <label class="wide">Tags <span class="muted">comma separated</span><input data-main="tags"></label>
+        </div>
+      </section>
+
+      <section>
+        <h2>Platforms</h2>
+        <div id="platform-toggles" class="toggles"></div>
+        <div id="platform-cards"></div>
+      </section>
+    </div>
+  </main>
+
+  <template id="card-tpl">
+    <article class="card">
+      <header>
+        <h3></h3>
+        <span class="badge"></span>
+      </header>
+      <ul class="issues"></ul>
+      <details>
+        <summary>Override details for this platform</summary>
+        <div class="grid overrides"></div>
+      </details>
+      <details>
+        <summary>Files included</summary>
+        <div class="include"></div>
+      </details>
+      <div class="preview"></div>
+      <footer>
+        <button class="export">Export ready-to-upload folder</button>
+        <span class="export-result muted"></span>
+      </footer>
+      <p class="sources muted"></p>
+    </article>
+  </template>
+
+  <script src="app.js"></script>
+</body>
+</html>
