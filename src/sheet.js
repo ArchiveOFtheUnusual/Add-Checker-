@@ -3,7 +3,6 @@
 //   Title: My Video
 //   Price: 9.99
 //   Tags: haunted, ghosts
-//   Platforms: YouTube, Etsy
 //   Description:
 //   Any number of lines...
 //
@@ -21,7 +20,7 @@ const KEYS = {
   description: 'description', desc: 'description', caption: 'description',
   tags: 'tags', hashtags: 'tags', keywords: 'tags',
   price: 'price',
-  platforms: 'platforms',
+  platforms: 'ignored', // older sheets had this; platforms are switched on by hand now
 };
 const SHEET_EXTS = ['txt', 'md', 'docx', 'pdf'];
 
@@ -92,17 +91,10 @@ function parse(text) {
   };
   clean(main);
   for (const p of Object.values(platforms)) clean(p);
-
-  const enable = new Set(Object.keys(platforms));
-  if (main.platforms) for (const n of main.platforms.split(/[,\n]/)) {
-    const k = platformKey(n);
-    if (k) enable.add(k);
-  }
-  delete main.platforms;
-  for (const p of Object.values(platforms)) delete p.platforms;
+  for (const o of [main, ...Object.values(platforms)]) delete o.ignored;
 
   const found = Object.keys(main).length + Object.values(platforms).reduce((n, p) => n + Object.keys(p).length, 0);
-  return { main, platforms, enable: [...enable], found };
+  return { main, platforms, found };
 }
 
 // Returns parsed fields, or null if the file isn't a details sheet.

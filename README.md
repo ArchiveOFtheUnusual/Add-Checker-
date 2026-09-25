@@ -14,7 +14,6 @@ Drop a details sheet in with your files and every platform tab gets filled in. I
 Title: Haunted Places Vol. 1
 Price: 9.99
 Tags: haunted places, paranormal, ghost stories
-Platforms: YouTube, Gumroad
 
 Description:
 As many lines as you want.
@@ -27,9 +26,9 @@ Caption: Would you stay here overnight?
 Hashtags: #haunted #fyp
 ```
 
-- The keys are `Title`, `Description` (or `Caption`), `Tags` (or `Hashtags`), `Price` and `Platforms`. They aren't case-sensitive.
-- A `[Platform]` section changes values for just that platform, and also switches that platform on.
-- If the sheet names no platforms and none are switched on yet, all of them are switched on.
+- The keys are `Title`, `Description` (or `Caption`), `Tags` (or `Hashtags`) and `Price`. They aren't case-sensitive.
+- A `[Platform]` section changes values for just that platform.
+- The sheet never switches platforms on or off. Use the "Prepare for …" switch on each platform's tab.
 - A file only counts as a details sheet if it has at least two of these keys. A product PDF won't be mistaken for one.
 - The sheet is used only to fill in details. It is never exported as a product file.
 

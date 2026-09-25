@@ -153,11 +153,9 @@ function uploadFiles(list) {
       if (name) flush();
       else $('#save-state').textContent = 'Saved';
       project = { ...data, name: name ?? data.name };
-      const on = Object.keys(platforms).filter((k) => project.platforms[k].enabled);
-      if (on.length && !on.includes(currentTab)) currentTab = on[0];
       fillInputs();
       $('#sheet-note').hidden = false;
-      $('#sheet-note').textContent = `Filled in from ${data.sheets.join(', ')}. Platforms: ${on.map((k) => platforms[k].name).join(', ')}.`;
+      $('#sheet-note').textContent = `Filled in from ${data.sheets.join(', ')}. Switch on the platforms you want in the tabs below.`;
     } else {
       applyFiles(data);
       renderAll();

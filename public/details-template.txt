@@ -1,7 +1,6 @@
 Title: Your title here
 Price: 9.99
 Tags: tag one, tag two, tag three
-Platforms: YouTube, Shopify, Gumroad, Etsy, TikTok, Instagram
 
 Description:
 Write your description here.

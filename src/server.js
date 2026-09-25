@@ -152,14 +152,10 @@ app.post('/api/projects/:id/files', wrap(async (req, res) => {
   res.json({ ...withStatus(save(p)), sheets: Object.keys(sheets).filter((n) => sheets[n]) });
 }));
 
-// Sheet values replace what's there. Platforms named in the sheet get switched on;
-// if it names none and none are on yet, all are switched on.
+// Sheet values replace what's there. It never switches platforms on or off; the user does that.
 function applySheet(p, sheet) {
   Object.assign(p.main, sheet.main);
   for (const [key, fields] of Object.entries(sheet.platforms)) Object.assign(p.platforms[key], fields);
-  const anyOn = Object.values(p.platforms).some((c) => c.enabled);
-  const enable = sheet.enable.length ? sheet.enable : anyOn ? [] : Object.keys(PLATFORMS);
-  for (const key of enable) p.platforms[key].enabled = true;
 }
 
 // Browser measures width/height/duration and reports them here.
