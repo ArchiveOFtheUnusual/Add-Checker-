@@ -32,18 +32,32 @@ Hashtags: #haunted #fyp
 - A file only counts as a details sheet if it has at least two of these keys. A product PDF won't be mistaken for one.
 - The sheet is used only to fill in details. It is never exported as a product file.
 
-## Run it (Windows)
+## Install (Windows)
 
-1. Install Node.js (LTS) from https://nodejs.org
-2. Double-click `start.bat`. The first run installs dependencies, then the dashboard opens at http://localhost:3000.
-3. Close the black window to stop the app.
+Download `Upload-Prep-<version>.exe` and double-click it. It's a standalone app: no Node.js, no browser, nothing to install.
 
-On Mac or Linux, run `npm install` and then `npm start`.
+The first time, Windows may say "Windows protected your PC", because the app isn't code-signed. Click **More info → Run anyway**.
+
+Your projects and exports are saved in `Documents\Upload Prep`.
+
+## Build the .exe
+
+```
+npm install
+npm run dist        # creates dist/Upload-Prep-<version>.exe
+```
+
+## Run from source
+
+- As a desktop window: `npm install`, then `npm run app`.
+- In a browser: `npm start`, or double-click `start.bat` on Windows, then open http://localhost:3000. Data is saved next to the code.
 
 ## Where things go
 
 - `data/projects/`: your projects and their uploaded files
 - `exports/<project>/<platform>/`: the ready-to-upload folders
+
+(In the desktop app, both are inside `Documents\Upload Prep`.)
 
 Files are written to disk as they upload, so large videos (multiple GB) work. The only limit is your free disk space. On the same drive, exports are hard links, so they don't take extra space or time.
 

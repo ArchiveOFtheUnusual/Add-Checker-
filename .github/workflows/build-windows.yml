@@ -1,0 +1,42 @@
+name: Build Windows app
+
+# Pull requests: build the .exe to check it works (downloadable from the run page).
+# main: build it and publish it on the Releases page.
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run dist
+      - name: Get version
+        id: version
+        shell: bash
+        run: echo "version=$(node -p "require('./package.json').version")" >> "$GITHUB_OUTPUT"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Upload-Prep-${{ steps.version.outputs.version }}
+          path: dist/Upload-Prep-*.exe
+      - name: Publish release
+        if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ steps.version.outputs.version }}
+          name: Upload Prep ${{ steps.version.outputs.version }}
+          body: |
+            Download **Upload-Prep-${{ steps.version.outputs.version }}.exe** below and double-click it. Nothing else to install.
+            If Windows says "Windows protected your PC", click More info → Run anyway.
+          files: dist/Upload-Prep-*.exe

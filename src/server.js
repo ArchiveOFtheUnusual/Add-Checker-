@@ -8,8 +8,10 @@ const { PLATFORMS, kindOf, effectiveMeta, platformFiles, check } = require('./pl
 const { readSheet } = require('./sheet');
 
 const ROOT = path.join(__dirname, '..');
-const DATA = path.join(ROOT, 'data', 'projects');
-const EXPORTS = path.join(ROOT, 'exports');
+// The desktop app points this at Documents\Upload Prep; otherwise data sits next to the code.
+const HOME = process.env.UPLOAD_PREP_HOME || ROOT;
+const DATA = path.join(HOME, 'data', 'projects');
+const EXPORTS = path.join(HOME, 'exports');
 const PORT = Number(process.env.PORT) || 3000;
 fs.mkdirSync(DATA, { recursive: true });
 
@@ -230,8 +232,20 @@ app.use((e, req, res, next) => {
   res.status(e.status || 500).json({ error: e.message });
 });
 
-app.listen(PORT, '127.0.0.1', () => {
-  const url = `http://localhost:${PORT}`;
-  console.log(`Upload Prep running at ${url}  (close this window to stop)`);
-  if (process.argv.includes('--open')) openWith('cmd', url);
-});
+// Resolves with the port actually used (pass 0 to let the OS pick a free one).
+function start(port = PORT) {
+  return new Promise((resolve, reject) => {
+    const server = app.listen(port, '127.0.0.1', () => resolve(server.address().port));
+    server.on('error', reject);
+  });
+}
+
+if (require.main === module) {
+  start().then((port) => {
+    const url = `http://localhost:${port}`;
+    console.log(`Upload Prep running at ${url}  (close this window to stop)`);
+    if (process.argv.includes('--open')) openWith('cmd', url);
+  });
+}
+
+module.exports = { start };
